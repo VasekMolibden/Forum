@@ -1,0 +1,65 @@
+html, body {
+    height: 100%;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    font-family: 'Segoe UI', Roboto, sans-serif;
+}
+main {
+    flex: 1 0 auto;
+}
+
+footer {
+    flex-shrink: 0; 
+}
+
+.navbar-brand i {
+    margin-right: .25rem;
+}
+
+.topic-card {
+    transition: transform .15s ease, box-shadow .15s ease;
+    border: 1px solid var(--bs-border-color);
+    border-radius: .75rem;
+}
+.topic-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.08);
+}
+.topic-card .topic-title a {
+    color: var(--bs-body-color);
+    text-decoration: none;
+    font-weight: 600;
+}
+.topic-card .topic-title a:hover {
+    color: var(--bs-primary);
+}
+
+.post-card {
+    border-left: 4px solid var(--bs-primary);
+    border-radius: .5rem;
+}
+.post-card.is-moderator {
+    border-left-color: var(--bs-warning);
+}
+
+.avatar {
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; color: #fff;
+    background: linear-gradient(135deg, #0d6efd, #6610f2);
+    flex-shrink: 0;
+}
+.avatar.mod {
+    background: linear-gradient(135deg, #ffc107, #fd7e14);
+    color: #212529;
+}
+
+.auth-wrapper {
+    max-width: 420px;
+    margin: 3rem auto;
+}
