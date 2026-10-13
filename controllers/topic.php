@@ -14,10 +14,15 @@ $content = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     requireLogin();
     verifyCsrfToken();
+    if ((int)$topic['is_closed'] === 1) {
+        renderError(403, 'Тема закрыта: новые ответы запрещены.');
+    }
     $content = trim(postString('content'));
     $error = validatePostContent($content) ?? '';
     if ($error === '') {
-        $postModel->create($id, (int)$_SESSION['user_id'], $content);
+        if (!$postModel->create($id, (int)$_SESSION['user_id'], $content)) {
+            renderError(403, 'Тема закрыта: новые ответы запрещены.');
+        }
         header('Location: topic.php?id=' . $id);
         exit;
     }

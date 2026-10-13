@@ -15,13 +15,28 @@ if (!canManage((int)$topic['user_id'])) {
 $error = '';
 $title = $topic['title'];
 $body = $topic['body'];
+$categoryModel = new Category($pdo);
+$categories = $categoryModel->all();
+$selectedCategory = $topic['category_id'] === null ? '' : (string)$topic['category_id'];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verifyCsrfToken();
     $title = trim(postString('title'));
     $body = trim(postString('body'));
-    $error = validateTopicTitle($title) ?? validateTopicBody($body) ?? '';
+    $selectedCategory = postString('category_id');
+    $categoryId = null;
+    if ($selectedCategory !== '') {
+        $parsedCategoryId = filter_var($selectedCategory, FILTER_VALIDATE_INT);
+        if ($parsedCategoryId === false || $parsedCategoryId < 1 || !$categoryModel->exists((int)$parsedCategoryId)) {
+            $error = 'Выбранная категория не существует.';
+        } else {
+            $categoryId = (int)$parsedCategoryId;
+        }
+    }
     if ($error === '') {
-        $topicModel->update($id, $title, $body);
+        $error = validateTopicTitle($title) ?? validateTopicBody($body) ?? '';
+    }
+    if ($error === '') {
+        $topicModel->update($id, $title, $body, $categoryId);
         setFlash('success', 'Тема изменена.');
         header('Location: topic.php?id=' . $id);
         exit;

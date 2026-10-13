@@ -1,10 +1,9 @@
 <?php
 declare(strict_types=1);
 
-// Параметры локального MySQL-сервера Laragon/XAMPP.
 $host = 'localhost';
-$user = 'root';
-$pass = '';
+$user = 'forumuser';
+$pass = 'wiakapebeb';
 $dbname = 'forum_db';
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
@@ -21,22 +20,39 @@ try {
     $pdo->exec("CREATE DATABASE IF NOT EXISTS `$dbname` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
     $pdo->exec("USE `$dbname`");
     $pdo->exec("
+        CREATE TABLE IF NOT EXISTS categories (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(100) NOT NULL UNIQUE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    ");
+    $pdo->exec("
         CREATE TABLE IF NOT EXISTS users (
             id INT AUTO_INCREMENT PRIMARY KEY,
             username VARCHAR(50) NOT NULL UNIQUE,
             password_hash VARCHAR(255) NOT NULL,
-            role ENUM('user', 'moderator') NOT NULL DEFAULT 'user',
+            role ENUM('user', 'moderator', 'admin') NOT NULL DEFAULT 'user',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     ");
+
+    // Добавляем роль администратора в существующих базах.
+    $roleColumn = $pdo->query("SHOW COLUMNS FROM users LIKE 'role'")->fetch();
+    if ($roleColumn && !str_contains((string)$roleColumn['Type'], "'admin'")) {
+        $pdo->exec("ALTER TABLE users MODIFY role ENUM('user', 'moderator', 'admin') NOT NULL DEFAULT 'user'");
+    }
     $pdo->exec("
         CREATE TABLE IF NOT EXISTS topics (
             id INT AUTO_INCREMENT PRIMARY KEY,
             user_id INT NOT NULL,
             title VARCHAR(255) NOT NULL,
             body TEXT NOT NULL,
+            category_id INT NULL,
+            is_pinned TINYINT(1) NOT NULL DEFAULT 0,
+            is_closed TINYINT(1) NOT NULL DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     ");
 
@@ -44,6 +60,25 @@ try {
     $topicBodyColumn = $pdo->query("SHOW COLUMNS FROM topics LIKE 'body'")->fetch();
     if (!$topicBodyColumn) {
         $pdo->exec('ALTER TABLE topics ADD COLUMN body TEXT NULL');
+    }
+    $topicColumns = $pdo->query('SHOW COLUMNS FROM topics')->fetchAll(PDO::FETCH_COLUMN);
+    if (!in_array('category_id', $topicColumns, true)) {
+        $pdo->exec('ALTER TABLE topics ADD COLUMN category_id INT NULL');
+    }
+    if (!in_array('is_pinned', $topicColumns, true)) {
+        $pdo->exec('ALTER TABLE topics ADD COLUMN is_pinned TINYINT(1) NOT NULL DEFAULT 0');
+    }
+    if (!in_array('is_closed', $topicColumns, true)) {
+        $pdo->exec('ALTER TABLE topics ADD COLUMN is_closed TINYINT(1) NOT NULL DEFAULT 0');
+    }
+    $categoryForeignKey = $pdo->query("
+        SELECT CONSTRAINT_NAME
+        FROM information_schema.KEY_COLUMN_USAGE
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'topics'
+          AND COLUMN_NAME = 'category_id' AND REFERENCED_TABLE_NAME = 'categories'
+    ")->fetchColumn();
+    if (!$categoryForeignKey) {
+        $pdo->exec('ALTER TABLE topics ADD CONSTRAINT fk_topics_category FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL');
     }
     $pdo->exec("
         CREATE TABLE IF NOT EXISTS posts (
@@ -78,7 +113,13 @@ function isLoggedIn(): bool
 // Проверяет, вошёл ли пользователь с ролью модератора.
 function isModerator(): bool
 {
-    return ($_SESSION['role'] ?? '') === 'moderator';
+    return in_array($_SESSION['role'] ?? '', ['moderator', 'admin'], true);
+}
+
+// Проверяет, вошёл ли пользователь с ролью администратора.
+function isAdmin(): bool
+{
+    return ($_SESSION['role'] ?? '') === 'admin';
 }
 
 // Перенаправляет гостя на страницу входа.
@@ -144,4 +185,17 @@ function getFlash(): ?array
     $flash = $_SESSION['flash'];
     unset($_SESSION['flash']);
     return $flash;
+}
+
+// Обновляет роль и имя пользователя, чтобы изменения аккаунта сразу отзывали старые права сессии.
+if (isset($_SESSION['user_id'])) {
+    $stmt = $pdo->prepare('SELECT username, role FROM users WHERE id = ?');
+    $stmt->execute([(int)$_SESSION['user_id']]);
+    $currentUser = $stmt->fetch();
+    if ($currentUser) {
+        $_SESSION['username'] = $currentUser['username'];
+        $_SESSION['role'] = $currentUser['role'];
+    } else {
+        unset($_SESSION['user_id'], $_SESSION['username'], $_SESSION['role']);
+    }
 }

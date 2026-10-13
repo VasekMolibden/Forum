@@ -42,10 +42,14 @@ final class Post
     }
 
     // Добавляет ответ пользователя в тему.
-    public function create(int $topicId, int $userId, string $content): void
+    public function create(int $topicId, int $userId, string $content): bool
     {
-        $stmt = $this->pdo->prepare('INSERT INTO posts (topic_id, user_id, content) VALUES (?, ?, ?)');
-        $stmt->execute([$topicId, $userId, $content]);
+        $stmt = $this->pdo->prepare('
+            INSERT INTO posts (topic_id, user_id, content)
+            SELECT ?, ?, ? FROM topics WHERE id = ? AND is_closed = 0
+        ');
+        $stmt->execute([$topicId, $userId, $content, $topicId]);
+        return $stmt->rowCount() > 0;
     }
 
     // Сохраняет исправленный текст ответа.

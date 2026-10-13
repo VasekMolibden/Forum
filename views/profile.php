@@ -11,7 +11,11 @@
                 </div>
                 <dl class="row mb-0">
                     <dt class="col-sm-5">Роль</dt>
-                    <dd class="col-sm-7"><?= $profile['role'] === 'moderator' ? 'Модератор' : 'Пользователь' ?></dd>
+                    <dd class="col-sm-7"><?= e(match ($profile['role']) {
+                        'admin' => 'Администратор',
+                        'moderator' => 'Модератор',
+                        default => 'Пользователь',
+                    }) ?></dd>
                     <dt class="col-sm-5">Дата регистрации</dt>
                     <dd class="col-sm-7"><?= e($profile['created_at']) ?></dd>
                     <dt class="col-sm-5">Сообщений</dt>

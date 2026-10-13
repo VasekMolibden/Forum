@@ -1,11 +1,5 @@
 <?php require __DIR__ . '/header.php'; ?>
-<nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="index.php">Темы форума</a></li>
-        <li class="breadcrumb-item"><a href="topic.php?id=<?= (int)$topic['id'] ?>"><?= e($topic['title']) ?></a></li>
-        <li class="breadcrumb-item active">Изменить тему</li>
-    </ol>
-</nav>
+
 <div class="card shadow-sm border-0">
     <div class="card-body">
         <h1 class="h4 mb-3">Изменить тему</h1>
@@ -19,6 +13,17 @@
             <div class="mb-3">
                 <label class="form-label" for="body">Описание темы</label>
                 <textarea id="body" name="body" rows="6" maxlength="5000" class="form-control" required><?= e($body) ?></textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="category_id">Категория</label>
+                <select id="category_id" name="category_id" class="form-select">
+                    <option value="">Без категории</option>
+                    <?php foreach ($categories as $category): ?>
+                        <option value="<?= (int)$category['id'] ?>" <?= $selectedCategory === (string)$category['id'] ? 'selected' : '' ?>>
+                            <?= e($category['name']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
             </div>
             <button class="btn btn-primary" type="submit">Сохранить</button>
             <a class="btn btn-outline-secondary" href="topic.php?id=<?= (int)$topic['id'] ?>">Отмена</a>

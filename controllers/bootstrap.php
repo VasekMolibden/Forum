@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once dirname(__DIR__) . '/db.php';
 require_once dirname(__DIR__) . '/models/User.php';
+require_once dirname(__DIR__) . '/models/Category.php';
 require_once dirname(__DIR__) . '/models/Topic.php';
 require_once dirname(__DIR__) . '/models/Post.php';
 
@@ -21,6 +22,25 @@ function requestPage(): int
 {
     $page = filter_input(INPUT_GET, 'page', FILTER_VALIDATE_INT);
     return $page !== false && $page !== null && $page > 0 ? $page : 1;
+}
+
+// Требует действующую административную роль из базы данных.
+function requireAdmin(): void
+{
+    requireLogin();
+    global $pdo;
+
+    $stmt = $pdo->prepare('SELECT role FROM users WHERE id = ?');
+    $stmt->execute([(int)$_SESSION['user_id']]);
+    $role = $stmt->fetchColumn();
+    if (!is_string($role)) {
+        renderError(403, 'Доступ к административной панели запрещён.');
+    }
+
+    $_SESSION['role'] = $role;
+    if ($role !== 'admin') {
+        renderError(403, 'Доступ к административной панели запрещён.');
+    }
 }
 
 // Показывает пагинацию, сохраняя переданные параметры страницы.
