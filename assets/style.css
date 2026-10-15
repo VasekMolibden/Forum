@@ -1,3 +1,32 @@
+/* Тёмная палитра поверх Bootstrap без изменения синей навигации и кнопок. */
+:root {
+    color-scheme: dark;
+    --bs-body-color: #e2e8f0;
+    --bs-body-color-rgb: 226, 232, 240;
+    --bs-body-bg: #141a23;
+    --bs-body-bg-rgb: 20, 26, 35;
+    --bs-emphasis-color: #f8fafc;
+    --bs-emphasis-color-rgb: 248, 250, 252;
+    --bs-secondary-color: #a5b0bf;
+    --bs-secondary-color-rgb: 165, 176, 191;
+    --bs-tertiary-color: #a5b0bf;
+    --bs-tertiary-color-rgb: 165, 176, 191;
+    --bs-tertiary-bg: #0d1219;
+    --bs-tertiary-bg-rgb: 13, 18, 25;
+    --bs-secondary-bg: #1c2531;
+    --bs-secondary-bg-rgb: 28, 37, 49;
+    --bs-light-rgb: 34, 44, 58;
+    --bs-border-color: #354253;
+    --bs-border-color-translucent: rgba(180, 195, 215, .16);
+    --bs-link-color: #6ea8fe;
+    --bs-link-hover-color: #9ec5fe;
+    --bs-heading-color: #f1f5f9;
+    --bs-table-color: #e2e8f0;
+    --bs-table-bg: #1c2531;
+    --bs-table-striped-color: #e2e8f0;
+    --bs-table-striped-bg: rgba(255, 255, 255, .035);
+}
+
 html, body {
     height: 100%;
 }
@@ -27,7 +56,7 @@ footer {
 }
 .topic-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 .5rem 1rem rgba(0,0,0,.08);
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.3);
 }
 .topic-card .topic-title a {
     color: var(--bs-body-color);
@@ -57,6 +86,42 @@ footer {
 .avatar.mod {
     background: linear-gradient(135deg, #ffc107, #fd7e14);
     color: #212529;
+}
+
+.card,
+.list-group-item,
+.table,
+.form-control,
+.form-select {
+    color: var(--bs-body-color);
+}
+
+.card,
+.list-group-item {
+    background-color: var(--bs-secondary-bg);
+}
+
+.bg-white {
+    background-color: var(--bs-secondary-bg) !important;
+}
+
+.text-bg-light {
+    color: var(--bs-body-color) !important;
+}
+
+.form-control::placeholder {
+    color: #8491a2;
+}
+
+.form-control:focus,
+.form-select:focus {
+    background-color: var(--bs-secondary-bg);
+    color: var(--bs-body-color);
+}
+
+.breadcrumb-item.active,
+.breadcrumb-item + .breadcrumb-item::before {
+    color: var(--bs-secondary-color);
 }
 
 .auth-wrapper {

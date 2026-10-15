@@ -24,8 +24,7 @@
 /storage/*.key
 /storage/pail
 /vendor
+/venv
 Homestead.json
 Homestead.yaml
 Thumbs.db
-venv/
-__pycache__/
